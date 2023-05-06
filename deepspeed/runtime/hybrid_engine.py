@@ -161,6 +161,7 @@ class DeepSpeedHybridEngine(DeepSpeedEngine):
                 self._unfuse_lora(self.layer_params[layer_id], self.lora_params[layer_id])
 
     def retake_inference_cache(self):
+        print("release_inference_cache", self._config.hybrid_engine.release_inference_cache)
         if self._config.hybrid_engine.release_inference_cache:
             retake_success = inference_cuda_module.retake_workspace()
 
@@ -261,8 +262,9 @@ class DeepSpeedHybridEngine(DeepSpeedEngine):
                 self.fuse_lora_weight()
 
             self.retake_inference_cache()
+            start_time = time.time()
             generate_ret_vals = self._generate(*inputs, **kwargs)
-
+            print("generate_ret_vals", time.time() - start_time , "s : module device ", self.module.device)
             if len(self.all_lora_params) > 0:
                 if (not self.Z3_enabled):
                     self.unfuse_lora_weight()
@@ -270,10 +272,13 @@ class DeepSpeedHybridEngine(DeepSpeedEngine):
                     self.unfuse_lora_weight_non_pinned()
                 self.is_lora_fused = False
 
+        print("release_inference_cache", self._config.hybrid_engine.release_inference_cache)
         if self._config.hybrid_engine.release_inference_cache:
             inference_cuda_module.release_workspace()
             gc.collect()
             get_accelerator().empty_cache()
+
+        print("_generate_latency ", self._generate_latency)
 
         self._generate_latency = time.time() - self._t0 - self._gather_latency
 
@@ -373,7 +378,7 @@ class DeepSpeedHybridEngine(DeepSpeedEngine):
                 others = latency - (self._generate_latency + self._training_latency)
                 print(f'|E2E latency={(latency):.2f}s ' + \
                       f'|Gather latency={self._gather_latency:.2f}s ({(self._gather_latency / latency * 100):.2f}%) '
-                      f'|Generate time={(self._generate_latency):.2f}s ({(self._generate_latency / latency * 100):.2f}%) ' + \
+                      f'|Generate time FORK={(self._generate_latency):.2f}s ({(self._generate_latency / latency * 100):.2f}%) ' + \
                       f'|Training time={(self._training_latency):.2f}s ({(self._training_latency / latency * 100):.2f}%) ' + \
                       f'|Others={others:.2f} ({(others / latency * 100):.2f}%)'
                       f'|CurSamplesPerSec={(1 / latency * self._total_batch_size):.2f} ' + \
