@@ -265,6 +265,8 @@ class DeepSpeedHybridEngine(DeepSpeedEngine):
             start_time = time.time()
             generate_ret_vals = self._generate(*inputs, **kwargs)
             print("generate_ret_vals", time.time() - start_time , "s : module device ", self.module.device)
+            print("generate_ret_vals.shape, device", generate_ret_vals.shape, " ; ", generate_ret_vals.device)
+            print("inputs.device", inputs[0].device)
             if len(self.all_lora_params) > 0:
                 if (not self.Z3_enabled):
                     self.unfuse_lora_weight()
