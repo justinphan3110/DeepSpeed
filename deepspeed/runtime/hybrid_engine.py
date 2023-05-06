@@ -382,7 +382,8 @@ class DeepSpeedHybridEngine(DeepSpeedEngine):
                       f'|Training time={(self._training_latency):.2f}s ({(self._training_latency / latency * 100):.2f}%) ' + \
                       f'|Others={others:.2f} ({(others / latency * 100):.2f}%)'
                       f'|CurSamplesPerSec={(1 / latency * self._total_batch_size):.2f} ' + \
-                      f'|AvgSamplesPerSec={(1 / (self._total_latency / self._iters) * self._total_batch_size):.2f}')
+                      f'|AvgSamplesPerSec={(1 / (self._total_latency / self._iters) * self._total_batch_size):.2f}' + \
+                      f'|Total Batch Size={self._total_batch_size}')
             self._t_start = time.time()
         self._training_latency = 0
         super().eval()
